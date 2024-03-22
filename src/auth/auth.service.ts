@@ -7,7 +7,9 @@ import { UsersService } from 'src/users/users.service'
 import { JwtService } from '@nestjs/jwt'
 import { CreateUserDto } from '../users/dto/create-user.dto'
 import { LoginDto } from './dto/login.dto'
-import { hash, compare } from 'bcryptjs'
+import { compare } from 'bcryptjs'
+import { AuthUser } from './interfaces/request-with-auth-user.interface'
+import { UpdateUserDto } from '../users/dto/update-user.dto'
 
 @Injectable()
 export class AuthService {
@@ -16,37 +18,35 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register({ name, lastName, email, password, role }: CreateUserDto) {
-    const user = await this.usersService.findOneByEmail(email)
+  async register(createUserDto: CreateUserDto) {
+    const { email } = createUserDto
+
+    const user = await this.usersService.findByEmail(email)
     if (user) throw new BadRequestException('Email already exists')
 
-    const hashedPassword = await hash(password, 10)
-
-    return await this.usersService.create({
-      name,
-      lastName,
-      email,
-      password: hashedPassword,
-      role,
-    })
+    return await this.usersService.create(createUserDto)
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.usersService.findOneByEmail(loginDto.email)
+    const user = await this.usersService.findToLogin(loginDto.email)
     if (!user) throw new UnauthorizedException('Invalid email')
 
-    const { id, email, password } = user
+    const { password, role } = user
 
     const isPasswordValid = await compare(loginDto.password, password)
     if (!isPasswordValid) throw new UnauthorizedException('Invalid password')
 
-    const payload = { id, email }
+    const payload: AuthUser = { email: loginDto.email, role }
     const token = await this.jwtService.signAsync(payload)
 
-    return { token, user: this.usersService.asProtectedUser(user) }
+    return { token }
   }
 
-  async me(id: number) {
-    return await this.usersService.findOne(id)
+  async me(email: string) {
+    return await this.usersService.findByEmail(email)
+  }
+
+  async updateMe(email: string, updateUserDto: UpdateUserDto) {
+    return await this.usersService.updateByEmail(email, updateUserDto)
   }
 }

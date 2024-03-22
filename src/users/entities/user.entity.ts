@@ -1,9 +1,5 @@
 import { Column, CreateDateColumn, Entity, UpdateDateColumn } from 'typeorm'
-
-export enum UserRole {
-  ADMIN,
-  EMPLOYEE,
-}
+import { UserRole } from '../../common/enums/user-role.enum'
 
 @Entity()
 export class User {
@@ -19,10 +15,10 @@ export class User {
   @Column({ unique: true })
   email: string
 
-  @Column()
+  @Column({ select: false })
   password: string
 
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.EMPLOYEE })
+  @Column('enum', { enum: UserRole, default: UserRole.EMPLOYEE })
   role: UserRole
 
   @CreateDateColumn()
