@@ -7,9 +7,11 @@ import {
   Param,
   Delete,
 } from '@nestjs/common'
+import { ProductsService } from './products.service'
 import { Auth } from '../common/decorators/auth.decorator'
 import { UserRole } from '../common/enums/user-role.enum'
-import { ProductsService } from './products.service'
+import { ExtractAuthUser } from '../common/decorators/extract-auth-user.decorator'
+import { AuthUser } from '../common/interfaces/request-with-auth-user.interface'
 import { CreateProductDto } from './dto/create-product.dto'
 import { UpdateProductDto } from './dto/update-product.dto'
 
@@ -24,15 +26,15 @@ export class ProductsController {
   }
 
   @Get()
-  @Auth(UserRole.ADMIN, UserRole.EMPLOYEE)
-  findAll() {
+  findAll(@ExtractAuthUser() user?: AuthUser) {
     return this.productsService.findAll()
   }
 
   @Get(':id')
-  @Auth(UserRole.ADMIN, UserRole.EMPLOYEE)
-  findOne(@Param('id') id: number) {
-    return this.productsService.findOne(id)
+  findOne(@Param('id') id: number, @ExtractAuthUser() user?: AuthUser) {
+    const { productsService } = this
+
+    return productsService.findOne(id, user?.role)
   }
 
   @Patch(':id')

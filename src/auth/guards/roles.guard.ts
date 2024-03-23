@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { UserRole } from '../../common/enums/user-role.enum'
 import { ROLES_KEY } from '../decorators/roles.decorator'
-import { RequestWithAuthUser } from '../interfaces/request-with-auth-user.interface'
+import { RequestWithAuthUser } from '../../common/interfaces/request-with-auth-user.interface'
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -20,9 +20,9 @@ export class RolesGuard implements CanActivate {
 
     // /*
     //   Se establece una estrategia que otorga acceso a todos los endpoints de la
-    //   API si el usuario tiene el rol de ADMIN.
+    //   API si el usuario tiene el rol de SUPER_ADMIN.
     // */
-    // if (user.role === UserRole.ADMIN) return true
+    // if (user.role === UserRole.SUPER_ADMIN) return true
 
     return roles.includes(user.role)
   }

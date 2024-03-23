@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { FindOptionsSelect, Repository } from 'typeorm'
 import { Product } from './entities/product.entity'
 import { CreateProductDto } from './dto/create-product.dto'
 import { UpdateProductDto } from './dto/update-product.dto'
+import { UserRole } from '../common/enums/user-role.enum'
 
 @Injectable()
 export class ProductsService {
@@ -13,15 +14,58 @@ export class ProductsService {
   ) {}
 
   async create(createProductDto: CreateProductDto) {
-    return await this.products.save(createProductDto)
+    const { products } = this
+
+    return await products.save(createProductDto)
   }
 
   async findAll() {
-    return await this.products.find()
+    const { products } = this
+
+    return await products.find()
   }
 
-  async findOne(id: number) {
-    return `This action returns a #${id} product`
+  async findOne(id: number, role?: UserRole) {
+    const { products } = this
+
+    const selectByRole: Record<
+      'public' | UserRole,
+      FindOptionsSelect<Product>
+    > = {
+      public: {
+        desc: true,
+        price: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      [UserRole.EMPLOYEE]: {
+        desc: true,
+        price: true,
+        stock: true,
+        imported: true,
+        createdAt: true,
+        updatedAt: true,
+        deletedAt: true,
+      },
+      [UserRole.ADMIN]: {
+        desc: true,
+        price: true,
+        stock: true,
+        minStockAlert: true,
+        imported: true,
+        createdAt: true,
+        updatedAt: true,
+        deletedAt: true,
+      },
+    }
+
+    const product = await products.findOne({
+      where: { id },
+      select: selectByRole[role !== undefined ? role : 'public'],
+    })
+
+    if (!product) throw new NotFoundException()
+    return product
   }
 
   async update(id: number, updateProductDto: UpdateProductDto) {

@@ -5,8 +5,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
-import { RequestWithAuthUser } from '../interfaces/request-with-auth-user.interface'
-import { constants } from '../../constants'
+import { RequestWithAuthUser } from '../../common/interfaces/request-with-auth-user.interface'
+import { extractToken } from '../../common/helpers/extract-token.helper'
+import { constants } from '../../common/constants'
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -15,7 +16,7 @@ export class AuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<RequestWithAuthUser>()
 
-    const token = this.extractToken(request)
+    const token = extractToken(request)
     if (!token) throw new UnauthorizedException()
 
     const { secret } = constants.jwt
@@ -28,10 +29,5 @@ export class AuthGuard implements CanActivate {
     }
 
     return true
-  }
-
-  private extractToken(request: RequestWithAuthUser) {
-    const [type, token] = request.headers.authorization?.split(' ') ?? []
-    return type === 'Bearer' ? token : undefined
   }
 }

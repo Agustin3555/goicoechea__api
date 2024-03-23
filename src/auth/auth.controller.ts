@@ -6,14 +6,14 @@ import {
   HttpStatus,
   Patch,
   Post,
-  Request,
 } from '@nestjs/common'
 import { AuthService } from './auth.service'
+import { LoginDto } from './dto/login.dto'
 import { Auth } from '../common/decorators/auth.decorator'
 import { UserRole } from '../common/enums/user-role.enum'
+import { ExtractAuthUser } from '../common/decorators/extract-auth-user.decorator'
+import { AuthUser } from '../common/interfaces/request-with-auth-user.interface'
 import { CreateUserDto } from '../users/dto/create-user.dto'
-import { LoginDto } from './dto/login.dto'
-import { RequestWithAuthUser } from './interfaces/request-with-auth-user.interface'
 import { UpdateUserDto } from '../users/dto/update-user.dto'
 
 @Controller('auth')
@@ -34,8 +34,8 @@ export class AuthController {
 
   @Get('me')
   @Auth(UserRole.ADMIN, UserRole.EMPLOYEE)
-  async me(@Request() req: RequestWithAuthUser) {
-    const { email } = req.user
+  async me(@ExtractAuthUser() user?: AuthUser) {
+    const { email } = user
 
     return this.authService.me(email)
   }
@@ -43,10 +43,10 @@ export class AuthController {
   @Patch('me')
   @Auth(UserRole.ADMIN, UserRole.EMPLOYEE)
   async updateMe(
-    @Request() req: RequestWithAuthUser,
     @Body() updateUserDto: UpdateUserDto,
+    @ExtractAuthUser() user?: AuthUser,
   ) {
-    const { email } = req.user
+    const { email } = user
 
     return this.authService.updateMe(email, updateUserDto)
   }

@@ -13,7 +13,7 @@ export class UsersService {
     private users: Repository<User>,
   ) {}
 
-  async hashPassword(dto: { password?: string }) {
+  private async hashPassword(dto: { password?: string }) {
     const { password } = dto
 
     if (password) {
@@ -23,48 +23,62 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto) {
-    this.hashPassword(createUserDto)
+    const { users, hashPassword } = this
 
-    const user = await this.users.save(createUserDto)
+    hashPassword(createUserDto)
+
+    const user = await users.save(createUserDto)
     delete user.password
 
     return user
   }
 
   async findAll() {
-    return await this.users.find({
+    const { users } = this
+
+    return await users.find({
       select: { id: true, name: true, lastName: true },
     })
   }
 
   async findOne(id: number) {
-    const user = await this.users.findOneBy({ id })
+    const { users } = this
+
+    const user = await users.findOneBy({ id })
     if (!user) throw new BadRequestException()
 
     return user
   }
 
   async findByEmail(email: string) {
-    return await this.users.findOneBy({ email })
+    const { users } = this
+
+    return await users.findOneBy({ email })
   }
 
   async findToLogin(email: string) {
-    return await this.users.findOne({
+    const { users } = this
+
+    return await users.findOne({
       where: { email },
       select: { password: true, role: true },
     })
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    await this.findOne(id)
+    const { users, findOne } = this
 
-    return await this.users.update(id, updateUserDto)
+    await findOne(id)
+
+    return await users.update(id, updateUserDto)
   }
 
   async updateByEmail(email: string, updateUserDto: UpdateUserDto) {
-    this.hashPassword(updateUserDto)
+    const { users, hashPassword } = this
 
-    return await this.users.update({ email }, updateUserDto)
+    hashPassword(updateUserDto)
+
+    return await users.update({ email }, updateUserDto)
   }
 
   async remove(id: number) {
