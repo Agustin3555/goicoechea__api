@@ -3,18 +3,18 @@ import {
   NestFastifyApplication,
   FastifyAdapter,
 } from '@nestjs/platform-fastify'
-import { AppModule } from 'src/app.module'
-import { createUsers } from 'src/users/users.factory'
+import { AppModule } from './app.module'
+import { usersFactory } from './users/users.factory'
 
 const main = async () => {
-  console.log('🌱 Planting\n')
+  console.log('🌱 Seeding\n')
 
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter(),
   )
 
-  await createUsers(app, 10)
+  await usersFactory.seed(app)
 
   console.log('\n🌳 Filled\n')
 }

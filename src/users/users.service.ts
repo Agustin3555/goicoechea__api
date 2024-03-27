@@ -20,7 +20,7 @@ export class UsersService {
   async create(createUserDto: CreateUserDto) {
     const { prisma, hashPassword } = this
 
-    hashPassword(createUserDto)
+    await hashPassword(createUserDto)
 
     const user = await prisma.user.create({ data: createUserDto })
     delete user.password
@@ -82,7 +82,7 @@ export class UsersService {
   async updateByEmail(email: string, updateUserDto: UpdateUserDto) {
     const { prisma, hashPassword } = this
 
-    hashPassword(updateUserDto)
+    await hashPassword(updateUserDto)
 
     return await prisma.user.update({ where: { email }, data: updateUserDto })
   }
