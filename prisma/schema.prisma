@@ -1,0 +1,301 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("MYSQL_URL")
+}
+
+
+enum UserRole {
+  EMPLOYEE
+  ADMIN
+}
+
+
+model User {
+  // Fields --------------------------------------------------
+  id        Int       @id @default(autoincrement())
+  name      String
+  lastName  String?
+  email     String    @unique
+  password  String
+  role      UserRole  @default(EMPLOYEE)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime?
+
+  // Relations -----------------------------------------------
+  productsCreated       Product[]       @relation("createdBy")
+  productsUpdated       Product[]       @relation("updatedBy")
+  productsDeleted       Product[]       @relation("deletedBy")
+
+  categoriesCreated     Category[]      @relation("createdBy")
+  categoriesUpdated     Category[]      @relation("updatedBy")
+  categoriesDeleted     Category[]      @relation("deletedBy")
+
+  manufacturersCreated  Manufacturer[]  @relation("createdBy")
+  manufacturersUpdated  Manufacturer[]  @relation("updatedBy")
+  manufacturersDeleted  Manufacturer[]  @relation("deletedBy")
+
+  offersCreated         Offer[]         @relation("createdBy")
+  offersUpdated         Offer[]         @relation("updatedBy")
+  offersDeleted         Offer[]         @relation("deletedBy")
+
+  salesCreated          Sale[]          @relation("createdBy")
+  salesUpdated          Sale[]          @relation("updatedBy")
+  salesDeleted          Sale[]          @relation("deletedBy")
+
+  @@map("user")
+}
+
+
+model Product {
+  // Fields ---------------------------------------------------------------------------------
+  id              Int       @id @default(autoincrement())
+  name            String    @unique
+  manufacturerId  Int?
+  categoryId      Int?
+  desc            String?
+  stock           Int       @default(1)
+  minStockAlert   Int       @default(1)
+  price           Float
+  imported        Boolean   @default(false)
+
+  createdByUserId Int
+  createdAt       DateTime  @default(now())
+  updatedByUserId Int?
+  updatedAt       DateTime?
+  deletedByUserId Int?
+  deletedAt       DateTime?
+
+  // Relations ------------------------------------------------------------------------------
+  category          Category?           @relation(fields: [categoryId], references: [id])
+  manufacturer      Manufacturer?       @relation(fields: [manufacturerId], references: [id])
+  booleanFeatures   BooleanFeature[]
+  quantityFeatures  QuantityFeature[]
+  fractionFeatures  FractionFeature[]
+  textFeatures      TextFeature[]
+  offers            ProductsOnOffers[]
+  sales             SalesOnProducts[]
+
+  createdByUser User  @relation("createdBy", fields: [createdByUserId], references: [id])
+  updatedByUser User? @relation("updatedBy", fields: [updatedByUserId], references: [id])
+  deletedByUser User? @relation("deletedBy", fields: [deletedByUserId], references: [id])
+
+  @@map("product")
+}
+
+
+model Category {
+  // Fields ----------------------------------------------------------------------------------------
+  id                Int       @id @default(autoincrement())
+  name              String    @unique
+  parentCategoryId  Int?
+
+  createdByUserId   Int
+  createdAt         DateTime  @default(now())
+  updatedByUserId   Int?
+  updatedAt         DateTime?
+  deletedByUserId   Int?
+  deletedAt         DateTime?
+
+  // Relations -------------------------------------------------------------------------------------
+  parentCategory  Category?   @relation("parentChild", fields: [parentCategoryId], references: [id])
+  categoriesChild Category[]  @relation("parentChild")
+  products        Product[]
+
+  createdByUser User  @relation("createdBy", fields: [createdByUserId], references: [id])
+  updatedByUser User? @relation("updatedBy", fields: [updatedByUserId], references: [id])
+  deletedByUser User? @relation("deletedBy", fields: [deletedByUserId], references: [id])
+
+  @@map("category")
+}
+
+
+model Manufacturer {
+  // Fields -----------------------------------------------------------------------------
+  id              Int       @id @default(autoincrement())
+  name            String    @unique
+
+  createdByUserId Int
+  createdAt       DateTime  @default(now())
+  updatedByUserId Int?
+  updatedAt       DateTime?
+  deletedByUserId Int?
+  deletedAt       DateTime?
+
+  // Relations --------------------------------------------------------------------------
+  products      Product[]
+
+  createdByUser User  @relation("createdBy", fields: [createdByUserId], references: [id])
+  updatedByUser User? @relation("updatedBy", fields: [updatedByUserId], references: [id])
+  deletedByUser User? @relation("deletedBy", fields: [deletedByUserId], references: [id])
+
+  @@map("manufacturer")
+}
+
+
+model BooleanFeature {
+  // Fields ------------------------------------------------------
+  productId Int
+  name      String
+  value     Boolean
+
+  // Relations ---------------------------------------------------
+  product Product @relation(fields: [productId], references: [id])
+
+  @@id([productId, name])
+
+  @@map("boolean_feature")
+}
+
+
+model QuantityFeature {
+  // Fields ------------------------------------------------------
+  productId   Int
+  name        String
+  value       Float
+  metricUnit  String?
+
+  // Relations ---------------------------------------------------
+  product Product @relation(fields: [productId], references: [id])
+
+  @@id([productId, name])
+
+  @@map("quantity_feature")
+}
+
+
+model FractionFeature {
+  // Fields ------------------------------------------------------
+  productId   Int
+  name        String
+  numValue    Int
+  denomValue  Int
+  metricUnit  String?
+
+  // Relations ---------------------------------------------------
+  product Product @relation(fields: [productId], references: [id])
+
+  @@id([productId, name])
+
+  @@map("fraction_feature")
+}
+
+
+model TextFeature {
+  // Fields ------------------------------------------------------
+  productId Int
+  name      String
+  value     String
+
+  // Relations ---------------------------------------------------
+  product Product @relation(fields: [productId], references: [id])
+
+  @@id([productId, name])
+
+  @@map("text_feature")
+}
+
+
+model Offer {
+  // Fields -----------------------------------------------------------------------------
+  id              Int       @id @default(autoincrement())
+  title           String
+  description     String
+  price           Float
+  startDate       DateTime
+  closeDate       DateTime
+
+  createdByUserId Int
+  createdAt       DateTime  @default(now())
+  updatedByUserId Int?
+  updatedAt       DateTime?
+  deletedByUserId Int?
+  deletedAt       DateTime?
+
+  // Relations --------------------------------------------------------------------------
+  products      ProductsOnOffers[]
+  sales         SalesOnOffers[]
+
+  createdByUser User  @relation("createdBy", fields: [createdByUserId], references: [id])
+  updatedByUser User? @relation("updatedBy", fields: [updatedByUserId], references: [id])
+  deletedByUser User? @relation("deletedBy", fields: [deletedByUserId], references: [id])
+
+  @@map("offer")
+}
+
+
+model ProductsOnOffers {
+  // Fields ------------------------------------------------------
+  offerId   Int
+  productId Int
+  quantity  Int @default(1)
+
+  // Relations ---------------------------------------------------
+  offer   Offer   @relation(fields: [offerId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@id([offerId, productId])
+
+  @@map("products_on_offers")
+}
+
+
+model Sale {
+  // Fields -----------------------------------------------------------------------------
+  id              Int       @id @default(autoincrement())
+  manualPrice     Float?
+  cashPayment     Boolean
+  cardPayment     Boolean
+
+  createdByUserId Int
+  createdAt       DateTime  @default(now())
+  updatedByUserId Int?
+  updatedAt       DateTime?
+  deletedByUserId Int?
+  deletedAt       DateTime?
+
+  // Relations --------------------------------------------------------------------------
+  products      SalesOnProducts[]
+  offers        SalesOnOffers[]
+
+  createdByUser User  @relation("createdBy", fields: [createdByUserId], references: [id])
+  updatedByUser User? @relation("updatedBy", fields: [updatedByUserId], references: [id])
+  deletedByUser User? @relation("deletedBy", fields: [deletedByUserId], references: [id])
+
+  @@map("sale")
+}
+
+
+model SalesOnProducts {
+  // Fields ------------------------------------------------------
+  productId Int
+  saleId    Int
+  quantity  Int @default(1)
+
+  // Relations ---------------------------------------------------
+  product Product @relation(fields: [productId], references: [id])
+  sale    Sale    @relation(fields: [saleId], references: [id])
+
+  @@id([productId, saleId])
+
+  @@map("sales_on_products")
+}
+
+
+model SalesOnOffers {
+  // Fields ------------------------------------------------
+  saleId    Int
+  offerId   Int
+  quantity  Int @default(1)
+
+  // Relations ---------------------------------------------
+  sale  Sale  @relation(fields: [saleId], references: [id])
+  offer Offer @relation(fields: [offerId], references: [id])
+
+  @@id([offerId, saleId])
+
+  @@map("sales_on_offers")
+}

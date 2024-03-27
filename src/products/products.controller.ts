@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common'
 import { ProductsService } from './products.service'
 import { Auth } from '../common/decorators/auth.decorator'
-import { UserRole } from '../common/enums/user-role.enum'
+import { UserRole } from '@prisma/client'
 import { ExtractAuthUser } from '../common/decorators/extract-auth-user.decorator'
 import { AuthUser } from '../common/interfaces/request-with-auth-user.interface'
 import { CreateProductDto } from './dto/create-product.dto'
@@ -21,8 +21,11 @@ export class ProductsController {
 
   @Post()
   @Auth(UserRole.ADMIN)
-  create(@Body() createProductDto: CreateProductDto) {
-    return this.productsService.create(createProductDto)
+  create(
+    @Body() createProductDto: CreateProductDto,
+    @ExtractAuthUser() user?: AuthUser,
+  ) {
+    return this.productsService.create(user.email, createProductDto)
   }
 
   @Get()

@@ -1,6 +1,6 @@
 import { Controller, Get, Body, Patch, Param, Delete } from '@nestjs/common'
 import { Auth } from '../common/decorators/auth.decorator'
-import { UserRole } from '../common/enums/user-role.enum'
+import { UserRole } from '@prisma/client'
 import { UsersService } from './users.service'
 import { UpdateUserDto } from './dto/update-user.dto'
 
@@ -17,6 +17,11 @@ export class UsersController {
   @Get(':id')
   findOne(@Param('id') id: number) {
     return this.usersService.findOne(id)
+  }
+
+  @Get('fullName/:fullName')
+  findByFullName(@Param('fullName') fullName: string) {
+    return this.usersService.findByFullName(fullName)
   }
 
   @Patch(':id')

@@ -5,7 +5,7 @@ import {
   IsString,
   MinLength,
 } from 'class-validator'
-import { UserRole } from '../../common/enums/user-role.enum'
+import { UserRole } from '@prisma/client'
 
 export class CreateUserDto {
   @IsString()

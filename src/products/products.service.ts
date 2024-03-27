@@ -1,37 +1,34 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
-import { InjectRepository } from '@nestjs/typeorm'
-import { FindOptionsSelect, Repository } from 'typeorm'
-import { Product } from './entities/product.entity'
+import { PrismaService } from '../prisma.service'
 import { CreateProductDto } from './dto/create-product.dto'
 import { UpdateProductDto } from './dto/update-product.dto'
-import { UserRole } from '../common/enums/user-role.enum'
+import { Prisma, UserRole } from '@prisma/client'
 
 @Injectable()
 export class ProductsService {
-  constructor(
-    @InjectRepository(Product)
-    private products: Repository<Product>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  async create(createProductDto: CreateProductDto) {
-    const { products } = this
+  async create(userEmail: string, createProductDto: CreateProductDto) {
+    const { prisma } = this
 
-    return await products.save(createProductDto)
+    return await prisma.product.create({
+      data: {
+        createdByUser: { connect: { email: userEmail } },
+        ...createProductDto,
+      },
+    })
   }
 
   async findAll() {
-    const { products } = this
+    const { prisma } = this
 
-    return await products.find()
+    return await prisma.product.findMany()
   }
 
   async findOne(id: number, role?: UserRole) {
-    const { products } = this
+    const { prisma } = this
 
-    const selectByRole: Record<
-      'public' | UserRole,
-      FindOptionsSelect<Product>
-    > = {
+    const selectByRole: Record<'public' | UserRole, Prisma.ProductSelect> = {
       public: {
         desc: true,
         price: true,
@@ -53,13 +50,16 @@ export class ProductsService {
         stock: true,
         minStockAlert: true,
         imported: true,
+        createdByUser: { select: { id: true, name: true } },
         createdAt: true,
+        updatedByUser: { select: { id: true, name: true } },
         updatedAt: true,
+        deletedByUser: { select: { id: true, name: true } },
         deletedAt: true,
       },
     }
 
-    const product = await products.findOne({
+    const product = await prisma.product.findUnique({
       where: { id },
       select: selectByRole[role !== undefined ? role : 'public'],
     })

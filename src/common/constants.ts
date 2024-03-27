@@ -1,4 +1,5 @@
-process.loadEnvFile('src/.env')
+// @ts-expect-error
+process.loadEnvFile()
 
 export const constants = {
   jwt: {
